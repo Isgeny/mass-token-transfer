@@ -23,16 +23,15 @@ public class MassTokenTransferAccount
 
     public Address Address => PrivateKey.GetAddress();
 
-    public string InvokeMassTransfer(PrivateKey callerAccount, ICollection<Amount> payments, ICollection<MassTransferItem> items) => InvokeScriptTransactionBuilder
-        .Params(Address, payments, new Call
-        {
-            Function = "massTransfer", Args = new List<CallArg>
-            {
-                new() { Type = CallArgType.List, Value = items.Select(x => new CallArg { Type = CallArgType.ByteArray, Value = new Base64s(Base58s.Decode(x.Recipient)) }).ToList() },
-                new() { Type = CallArgType.List, Value = items.Select(x => new CallArg { Type = CallArgType.Integer, Value = x.Amount }).ToList() },
-                new() { Type = CallArgType.List, Value = items.Select(x => new CallArg { Type = CallArgType.Integer, Value = x.AssetIdx }).ToList() },
-            }
-        })
+    public string InvokeMassTransfer(PrivateKey callerAccount, ICollection<Amount> payments, ICollection<MassTransferItem> items) => InvokeMassTransfer(callerAccount, payments, new List<CallArg>
+    {
+        new() { Type = CallArgType.List, Value = items.Select(x => new CallArg { Type = CallArgType.ByteArray, Value = new Base64s(Base58s.Decode(x.Recipient)) }).ToList() },
+        new() { Type = CallArgType.List, Value = items.Select(x => new CallArg { Type = CallArgType.Integer, Value = x.Amount }).ToList() },
+        new() { Type = CallArgType.List, Value = items.Select(x => new CallArg { Type = CallArgType.Integer, Value = x.AssetIdx }).ToList() },
+    });
+
+    public string InvokeMassTransfer(PrivateKey callerAccount, ICollection<Amount> payments, ICollection<CallArg> callArgs) => InvokeScriptTransactionBuilder
+        .Params(Address, payments, new Call { Function = "massTransfer", Args = callArgs })
         .GetSignedWith(callerAccount)
         .BroadcastAndWait(PrivateNode.Instance)
         .Transaction.Id!;

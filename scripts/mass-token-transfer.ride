@@ -2,10 +2,23 @@
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
+func validateArguments(recipients: List[ByteVector], amounts: List[Int], assetIdx: List[Int], payments: List[AttachedPayment]) = {
+    let recipientsSize = recipients.size()
+    let amountsSize = amounts.size()
+    let assetIdxSize = assetIdx.size()
+    let paymentsSize = payments.size()
+    let minAmount = amounts.min()
+    let minAssetIdx = assetIdx.min()
+    let maxAssetIdx = assetIdx.max()
+    recipientsSize == amountsSize && recipientsSize == assetIdxSize && recipientsSize > 0 && recipientsSize <= 100 && paymentsSize > 0 &&
+        minAmount > 0 && minAssetIdx == 0 && maxAssetIdx == paymentsSize - 1
+}
+
 @Callable(i)
 func massTransfer(recipients: List[ByteVector], amounts: List[Int], assetIdx: List[Int]) = {
-    let recipientsSize = recipients.size()
+    if (!validateArguments(recipients, amounts, assetIdx, i.payments)) then throw("Invalid arguments") else
 
+    let recipientsSize = recipients.size()
     func makeScriptTransfers(accum: (List[ScriptTransfer], Int), next: Int) = {
         let (result, j) = accum
         if (j >= recipientsSize) then (result, j + 1) else

@@ -4,12 +4,7 @@ namespace MassTokenTransfer.Tests;
 
 public class MassTransferTests
 {
-    private readonly MassTokenTransferAccount _massTokenTransferAccount;
-
-    public MassTransferTests()
-    {
-        _massTokenTransferAccount = new MassTokenTransferAccount();
-    }
+    private readonly MassTokenTransferAccount _massTokenTransferAccount = new();
 
     [Fact]
     public void OneRecipient_OneAsset_Success()
