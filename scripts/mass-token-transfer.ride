@@ -3,17 +3,22 @@
 {-# SCRIPT_TYPE ACCOUNT #-}
 
 @Callable(i)
-func makeScriptTransfers(recipients: List[String], amounts: List[Int], index: Int) = {
-    if (index == recipients.size()) then ([], unit) else
-    strict result = invoke(this, "makeScriptTransfers", [recipients, amounts, index + 1], [])
-    (
-        [ScriptTransfer(addressFromStringValue(recipients[index]), amounts[index], unit)],
-        unit
-    )
-}
-
-@Callable(i)
 func massTransfer(recipients: List[String], amounts: List[Int]) = {
-    strict result = invoke(this, "makeScriptTransfers", [recipients, amounts, 0], [])
-    nil
+    func makeScriptTransfers(accum: (List[ScriptTransfer], Int), next: Int) = {
+        let (result, j) = accum
+        (result :+ ScriptTransfer(addressFromStringValue(recipients[j]), next, unit), j + 1)
+    }
+
+    let recipientsSize = recipients.size()
+
+    # Yeah I know looks like spaghetti code -___-
+    let result = match recipientsSize {
+        case 1 => FOLD<1>(amounts, ([], 0), makeScriptTransfers)
+        case 2 => FOLD<2>(amounts, ([], 0), makeScriptTransfers)
+        # ... TODO: Other branches
+        case 100 => FOLD<100>(amounts, ([], 0), makeScriptTransfers)
+        case _ => throw("Unsupported recipients quantity")
+    }
+
+    result._1
 }
