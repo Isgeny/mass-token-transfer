@@ -9,20 +9,25 @@ func toAssetBytes(assetStr: String) = {
 }
 
 @Callable(i)
-func massTransfer(recipients: List[String], amounts: List[Int], assets: List[String]) = {
-    func makeScriptTransfers(accum: (List[ScriptTransfer], Int), next: Int) = {
+func massTransfer(input: String) = {
+    let inputList = input.split(":")
+    let recipintsList = inputList[0].split_4C(",")
+    let amountsList = inputList[1].split_4C(",")
+    let assetsList = inputList[2].split_4C(",")
+
+    func makeScriptTransfers(accum: (List[ScriptTransfer], Int), next: String) = {
         let (result, j) = accum
-        (result :+ ScriptTransfer(addressFromStringValue(recipients[j]), next, toAssetBytes(assets[j])), j + 1)
+        (result :+ ScriptTransfer(addressFromStringValue(recipintsList[j]), parseIntValue(next), toAssetBytes(assetsList[j])), j + 1)
     }
 
-    let recipientsSize = recipients.size()
+    let recipientsSize = recipintsList.size()
 
     # Yeah I know looks like spaghetti code -___-
     let result = match recipientsSize {
-        case 1 => FOLD<1>(amounts, ([], 0), makeScriptTransfers)
-        case 2 => FOLD<2>(amounts, ([], 0), makeScriptTransfers)
+        case 1 => FOLD<1>(amountsList, ([], 0), makeScriptTransfers)
+        case 2 => FOLD<2>(amountsList, ([], 0), makeScriptTransfers)
         # ... TODO: Other branches
-        case 100 => FOLD<100>(amounts, ([], 0), makeScriptTransfers)
+        case 100 => FOLD<100>(amountsList, ([], 0), makeScriptTransfers)
         case _ => throw("Unsupported recipients quantity")
     }
 
