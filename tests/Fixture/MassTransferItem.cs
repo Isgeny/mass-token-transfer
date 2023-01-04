@@ -5,4 +5,6 @@ public record MassTransferItem
     public string Recipient { get; set; } = string.Empty;
 
     public long Amount { get; set; }
+
+    public string Asset { get; set; } = string.Empty;
 }

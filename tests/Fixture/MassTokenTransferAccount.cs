@@ -29,6 +29,7 @@ public class MassTokenTransferAccount
             {
                 new() { Type = CallArgType.List, Value = items.Select(x => new CallArg { Type = CallArgType.String, Value = x.Recipient }).ToList() },
                 new() { Type = CallArgType.List, Value = items.Select(x => new CallArg { Type = CallArgType.Integer, Value = x.Amount }).ToList() },
+                new() { Type = CallArgType.List, Value = items.Select(x => new CallArg { Type = CallArgType.String, Value = x.Asset }).ToList() },
             }
         })
         .GetSignedWith(callerAccount)

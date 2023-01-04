@@ -2,11 +2,17 @@
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
+let WAVESIDSTR = "WAVES"
+
+func toAssetBytes(assetStr: String) = {
+    if (assetStr == WAVESIDSTR) then unit else assetStr.fromBase58String()
+}
+
 @Callable(i)
-func massTransfer(recipients: List[String], amounts: List[Int]) = {
+func massTransfer(recipients: List[String], amounts: List[Int], assets: List[String]) = {
     func makeScriptTransfers(accum: (List[ScriptTransfer], Int), next: Int) = {
         let (result, j) = accum
-        (result :+ ScriptTransfer(addressFromStringValue(recipients[j]), next, unit), j + 1)
+        (result :+ ScriptTransfer(addressFromStringValue(recipients[j]), next, toAssetBytes(assets[j])), j + 1)
     }
 
     let recipientsSize = recipients.size()
