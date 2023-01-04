@@ -2,34 +2,16 @@
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
-let WAVESIDSTR = "WAVES"
-
-func toAssetBytes(assetStr: String) = {
-    if (assetStr == WAVESIDSTR) then unit else assetStr.fromBase58String()
-}
-
 @Callable(i)
-func massTransfer(input: String) = {
-    let inputList = input.split(":")
-    let recipintsList = inputList[0].split_4C(",")
-    let amountsList = inputList[1].split_4C(",")
-    let assetsList = inputList[2].split_4C(",")
+func massTransfer(recipients: List[ByteVector], amounts: List[Int], assetIdx: List[Int]) = {
+    let recipientsSize = recipients.size()
 
-    func makeScriptTransfers(accum: (List[ScriptTransfer], Int), next: String) = {
+    func makeScriptTransfers(accum: (List[ScriptTransfer], Int), next: Int) = {
         let (result, j) = accum
-        (result :+ ScriptTransfer(addressFromStringValue(recipintsList[j]), parseIntValue(next), toAssetBytes(assetsList[j])), j + 1)
+        if (j >= recipientsSize) then (result, j + 1) else
+        (result :+ ScriptTransfer(Address(recipients[j]), next, i.payments[assetIdx[j]].assetId), j + 1)
     }
 
-    let recipientsSize = recipintsList.size()
-
-    # Yeah I know looks like spaghetti code -___-
-    let result = match recipientsSize {
-        case 1 => FOLD<1>(amountsList, ([], 0), makeScriptTransfers)
-        case 2 => FOLD<2>(amountsList, ([], 0), makeScriptTransfers)
-        # ... TODO: Other branches
-        case 100 => FOLD<100>(amountsList, ([], 0), makeScriptTransfers)
-        case _ => throw("Unsupported recipients quantity")
-    }
-
+    let result = FOLD<100>(amounts, ([], 0), makeScriptTransfers)
     result._1
 }

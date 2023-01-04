@@ -6,5 +6,5 @@ public record MassTransferItem
 
     public long Amount { get; set; }
 
-    public string Asset { get; set; } = string.Empty;
+    public long AssetIdx { get; set; }
 }

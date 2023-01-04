@@ -37,6 +37,12 @@ public static class PrivateNode
         return privateKey;
     }
 
+    public static AssetId IssueAsset(PrivateKey issuer, string name, long amount, int decimals) => AssetId.As(IssueTransactionBuilder
+        .Params(name, amount, decimals, null, false)
+        .GetSignedWith(issuer)
+        .BroadcastAndWait(Instance)
+        .Transaction.Id!.Encoded);
+
     public static Address GetAddress(this PrivateKey privateKey) => Address.FromPublicKey(ChainId, privateKey.PublicKey);
 
     public static TransactionInfo BroadcastAndWait(this Transaction transaction, Node node) => node.WaitForTransaction(node.Broadcast(transaction).Id);

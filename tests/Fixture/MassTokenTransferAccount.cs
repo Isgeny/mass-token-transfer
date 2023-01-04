@@ -14,6 +14,7 @@ public class MassTokenTransferAccount
 
         SetScriptTransactionBuilder
             .Params(scriptInfo.Script!)
+            .SetFee(100000000)
             .GetSignedWith(PrivateKey)
             .BroadcastAndWait(PrivateNode.Instance);
     }
@@ -22,16 +23,14 @@ public class MassTokenTransferAccount
 
     public Address Address => PrivateKey.GetAddress();
 
-    public string InvokeMassTransfer(PrivateKey callerAccount, long wavesAmount, List<MassTransferItem> items) => InvokeScriptTransactionBuilder
-        .Params(Address, new List<Amount> { new() { Value = wavesAmount } }, new Call
+    public string InvokeMassTransfer(PrivateKey callerAccount, ICollection<Amount> payments, ICollection<MassTransferItem> items) => InvokeScriptTransactionBuilder
+        .Params(Address, payments, new Call
         {
             Function = "massTransfer", Args = new List<CallArg>
             {
-                new()
-                {
-                    Type = CallArgType.String,
-                    Value = $"{string.Join(",", items.Select(x => x.Recipient))}:{string.Join(",", items.Select(x => x.Amount))}:{string.Join(",", items.Select(x => x.Asset))}"
-                },
+                new() { Type = CallArgType.List, Value = items.Select(x => new CallArg { Type = CallArgType.ByteArray, Value = new Base64s(Base58s.Decode(x.Recipient)) }).ToList() },
+                new() { Type = CallArgType.List, Value = items.Select(x => new CallArg { Type = CallArgType.Integer, Value = x.Amount }).ToList() },
+                new() { Type = CallArgType.List, Value = items.Select(x => new CallArg { Type = CallArgType.Integer, Value = x.AssetIdx }).ToList() },
             }
         })
         .GetSignedWith(callerAccount)
