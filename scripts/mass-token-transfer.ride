@@ -2,3 +2,18 @@
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
+@Callable(i)
+func makeScriptTransfers(recipients: List[String], amounts: List[Int], index: Int) = {
+    if (index == recipients.size()) then ([], unit) else
+    strict result = invoke(this, "makeScriptTransfers", [recipients, amounts, index + 1], [])
+    (
+        [ScriptTransfer(addressFromStringValue(recipients[index]), amounts[index], unit)],
+        unit
+    )
+}
+
+@Callable(i)
+func massTransfer(recipients: List[String], amounts: List[Int]) = {
+    strict result = invoke(this, "makeScriptTransfers", [recipients, amounts, 0], [])
+    nil
+}

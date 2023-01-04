@@ -21,15 +21,18 @@ public static class PrivateNode
         }
     }
 
-    public static PrivateKey GenerateAccount()
+    public static PrivateKey GenerateAccount(long wavesBalance)
     {
         var seed = Crypto.GenerateRandomSeedPhrase();
         var privateKey = PrivateKey.FromSeed(seed);
 
-        TransferTransactionBuilder
-            .Params(privateKey.GetAddress(), 100_00000000)
-            .GetSignedWith(MainAccount)
-            .BroadcastAndWait(Instance);
+        if (wavesBalance > 0)
+        {
+            TransferTransactionBuilder
+                .Params(privateKey.GetAddress(), wavesBalance)
+                .GetSignedWith(MainAccount)
+                .BroadcastAndWait(Instance);
+        }
 
         return privateKey;
     }

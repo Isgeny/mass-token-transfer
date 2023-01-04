@@ -6,7 +6,7 @@ public class MassTokenTransferAccount
 
     public MassTokenTransferAccount()
     {
-        PrivateKey = PrivateNode.GenerateAccount();
+        PrivateKey = PrivateNode.GenerateAccount(1_00000000);
 
         var scriptText = File.ReadAllText(ScriptPath);
 
@@ -21,4 +21,17 @@ public class MassTokenTransferAccount
     public PrivateKey PrivateKey { get; }
 
     public Address Address => PrivateKey.GetAddress();
+
+    public string InvokeMassTransfer(PrivateKey callerAccount, long wavesAmount, List<MassTransferItem> items) => InvokeScriptTransactionBuilder
+        .Params(Address, new List<Amount> { new() { Value = wavesAmount } }, new Call
+        {
+            Function = "massTransfer", Args = new List<CallArg>
+            {
+                new() { Type = CallArgType.List, Value = items.Select(x => new CallArg { Type = CallArgType.String, Value = x.Recipient }).ToList() },
+                new() { Type = CallArgType.List, Value = items.Select(x => new CallArg { Type = CallArgType.Integer, Value = x.Amount }).ToList() },
+            }
+        })
+        .GetSignedWith(callerAccount)
+        .BroadcastAndWait(PrivateNode.Instance)
+        .Transaction.Id!;
 }
