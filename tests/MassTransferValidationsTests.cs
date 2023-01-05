@@ -233,4 +233,75 @@ public class MassTransferValidationsTests
 
         invoke.Should().Throw<Exception>().WithMessage("*Invalid arguments");
     }
+
+    [Fact]
+    public void InvalidRecipientAddress_ThrowException()
+    {
+        var sender = PrivateNode.GenerateAccount(100_00000000);
+
+        var payments = new List<Amount>
+        {
+            new() { Value = 50_00000000, },
+        };
+        var massTransferItems = new List<MassTransferItem>
+        {
+            new() { Recipient = "QWERTY", Amount = 50_00000000, AssetIdx = 0, },
+        };
+
+        var invoke = () => _massTokenTransferAccount.InvokeMassTransfer(sender, payments, massTransferItems);
+
+        invoke.Should().Throw<Exception>().WithMessage("*Wrong addressBytes length: expected: 26, actual: 5");
+    }
+
+    [Fact]
+    public void AmountsLessThanPayments_ThrowException()
+    {
+        var sender = PrivateNode.GenerateAccount(100_00000000);
+        var assetId = PrivateNode.IssueAsset(sender, "TOKEN", 10_000000, 6);
+        var recipient1 = PrivateNode.GenerateAccount(0);
+        var recipient2 = PrivateNode.GenerateAccount(0);
+
+        var payments = new List<Amount>
+        {
+            new() { Value = 50_00000000, },
+            new() { Value = 8_000000, AssetId = assetId, },
+        };
+        var massTransferItems = new List<MassTransferItem>
+        {
+            new() { Recipient = recipient1.GetAddress().Encoded, Amount = 10_00000000, AssetIdx = 0, },
+            new() { Recipient = recipient2.GetAddress().Encoded, Amount = 30_00000000, AssetIdx = 0, },
+            new() { Recipient = recipient1.GetAddress().Encoded, Amount = 3_000000, AssetIdx = 1, },
+            new() { Recipient = recipient2.GetAddress().Encoded, Amount = 4_000000, AssetIdx = 1, },
+        };
+
+        var invoke = () => _massTokenTransferAccount.InvokeMassTransfer(sender, payments, massTransferItems);
+
+        invoke.Should().Throw<Exception>().WithMessage("*Invalid arguments");
+    }
+
+    [Fact]
+    public void AmountsLargerThanPayments_ThrowException()
+    {
+        var sender = PrivateNode.GenerateAccount(100_00000000);
+        var assetId = PrivateNode.IssueAsset(sender, "TOKEN", 10_000000, 6);
+        var recipient1 = PrivateNode.GenerateAccount(0);
+        var recipient2 = PrivateNode.GenerateAccount(0);
+
+        var payments = new List<Amount>
+        {
+            new() { Value = 50_00000000, },
+            new() { Value = 8_000000, AssetId = assetId, },
+        };
+        var massTransferItems = new List<MassTransferItem>
+        {
+            new() { Recipient = recipient1.GetAddress().Encoded, Amount = 30_00000000, AssetIdx = 0, },
+            new() { Recipient = recipient2.GetAddress().Encoded, Amount = 30_00000000, AssetIdx = 0, },
+            new() { Recipient = recipient1.GetAddress().Encoded, Amount = 5_000000, AssetIdx = 1, },
+            new() { Recipient = recipient2.GetAddress().Encoded, Amount = 4_000000, AssetIdx = 1, },
+        };
+
+        var invoke = () => _massTokenTransferAccount.InvokeMassTransfer(sender, payments, massTransferItems);
+
+        invoke.Should().Throw<Exception>().WithMessage("*Invalid arguments");
+    }
 }

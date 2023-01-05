@@ -2,29 +2,48 @@
 {-# CONTENT_TYPE DAPP #-}
 {-# SCRIPT_TYPE ACCOUNT #-}
 
-func validateArguments(recipients: List[ByteVector], amounts: List[Int], assetIdx: List[Int], payments: List[AttachedPayment]) = {
+func validateArguments(recipients: List[ByteVector], amounts: List[Int], paymentIdx: List[Int], payments: List[AttachedPayment]) = {
     let recipientsSize = recipients.size()
     let amountsSize = amounts.size()
-    let assetIdxSize = assetIdx.size()
+    let paymentIdxSize = paymentIdx.size()
     let paymentsSize = payments.size()
     let minAmount = amounts.min()
-    let minAssetIdx = assetIdx.min()
-    let maxAssetIdx = assetIdx.max()
-    recipientsSize == amountsSize && recipientsSize == assetIdxSize && recipientsSize > 0 && recipientsSize <= 100 && paymentsSize > 0 &&
-        minAmount > 0 && minAssetIdx == 0 && maxAssetIdx == paymentsSize - 1
+    let minPaymentIdx = paymentIdx.min()
+    let maxPaymentIdx = paymentIdx.max()
+
+    func paymentsValidator(paymentAccum: (Int, Int), nextPayment: AttachedPayment) = {
+        let (validPayments, j) = paymentAccum
+        if (j >= paymentsSize) then (validPayments, j + 1) else
+
+        func amountsAggregator(amountAccum: (Int, Int), nextAmount: Int) = {
+            let (amount, k) = amountAccum
+            if (k >= recipientsSize || paymentIdx[k] != j) then (amount, k + 1) else
+            (amount + nextAmount, k + 1)
+        }
+
+        let aggregatedAmount = FOLD<100>(amounts, (0, 0), amountsAggregator)
+        if (aggregatedAmount._1 == nextPayment.amount)
+            then (validPayments + 1, j + 1) 
+            else (validPayments, j + 1)
+    }
+
+    let paymentsValidation = FOLD<10>(payments, (0, 0), paymentsValidator)
+
+    recipientsSize == amountsSize && recipientsSize == paymentIdxSize && recipientsSize > 0 && recipientsSize <= 100 && paymentsSize > 0 &&
+        minAmount > 0 && minPaymentIdx == 0 && maxPaymentIdx == paymentsSize - 1 && paymentsValidation._1 == paymentsSize
 }
 
 @Callable(i)
-func massTransfer(recipients: List[ByteVector], amounts: List[Int], assetIdx: List[Int]) = {
-    if (!validateArguments(recipients, amounts, assetIdx, i.payments)) then throw("Invalid arguments") else
+func massTransfer(recipients: List[ByteVector], amounts: List[Int], paymentIdx: List[Int]) = {
+    if (!validateArguments(recipients, amounts, paymentIdx, i.payments)) then throw("Invalid arguments") else
 
     let recipientsSize = recipients.size()
-    func makeScriptTransfers(accum: (List[ScriptTransfer], Int), next: Int) = {
-        let (result, j) = accum
-        if (j >= recipientsSize) then (result, j + 1) else
-        (result :+ ScriptTransfer(Address(recipients[j]), next, i.payments[assetIdx[j]].assetId), j + 1)
+    func scriptTransfersGenerator(accum: (List[ScriptTransfer], Int), next: Int) = {
+        let (scriptTransfers, j) = accum
+        if (j >= recipientsSize) then (scriptTransfers, j + 1) else
+        (scriptTransfers :+ ScriptTransfer(Address(recipients[j]), next, i.payments[paymentIdx[j]].assetId), j + 1)
     }
 
-    let result = FOLD<100>(amounts, ([], 0), makeScriptTransfers)
-    result._1
+    let result = FOLD<100>(amounts, ([], 0), scriptTransfersGenerator)
+    (result._1, unit)
 }
