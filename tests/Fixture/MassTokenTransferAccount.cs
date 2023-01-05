@@ -28,6 +28,7 @@ public class MassTokenTransferAccount
         new() { Type = CallArgType.List, Value = items.Select(x => new CallArg { Type = CallArgType.ByteArray, Value = new Base64s(Base58s.Decode(x.Recipient)) }).ToList() },
         new() { Type = CallArgType.List, Value = items.Select(x => new CallArg { Type = CallArgType.Integer, Value = x.Amount }).ToList() },
         new() { Type = CallArgType.List, Value = items.Select(x => new CallArg { Type = CallArgType.Integer, Value = x.AssetIdx }).ToList() },
+        new() { Type = CallArgType.String, Value = "Test attachment" },
     });
 
     public string InvokeMassTransfer(PrivateKey callerAccount, ICollection<Amount> payments, ICollection<CallArg> callArgs) => InvokeScriptTransactionBuilder

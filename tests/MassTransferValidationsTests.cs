@@ -41,6 +41,7 @@ public class MassTransferValidationsTests
                     new() { Type = CallArgType.Integer, Value = 0L },
                 },
             },
+            new() { Type = CallArgType.String, Value = "Test attachment" },
         };
 
         var invoke = () => _massTokenTransferAccount.InvokeMassTransfer(sender, payments, callArgs);
@@ -83,6 +84,7 @@ public class MassTransferValidationsTests
                     new() { Type = CallArgType.Integer, Value = 0L },
                 },
             },
+            new() { Type = CallArgType.String, Value = "Test attachment" },
         };
 
         var invoke = () => _massTokenTransferAccount.InvokeMassTransfer(sender, payments, callArgs);
@@ -125,6 +127,7 @@ public class MassTransferValidationsTests
                     new() { Type = CallArgType.Integer, Value = 0L },
                 },
             },
+            new() { Type = CallArgType.String, Value = "Test attachment" },
         };
 
         var invoke = () => _massTokenTransferAccount.InvokeMassTransfer(sender, payments, callArgs);

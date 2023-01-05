@@ -34,7 +34,7 @@ func validateArguments(recipients: List[ByteVector], amounts: List[Int], payment
 }
 
 @Callable(i)
-func massTransfer(recipients: List[ByteVector], amounts: List[Int], paymentIdx: List[Int]) = {
+func massTransfer(recipients: List[ByteVector], amounts: List[Int], paymentIdx: List[Int], attachment: String) = {
     if (!validateArguments(recipients, amounts, paymentIdx, i.payments)) then throw("Invalid arguments") else
 
     let recipientsSize = recipients.size()
